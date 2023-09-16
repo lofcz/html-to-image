@@ -183,12 +183,20 @@ export function canvasToBlob(
 export function createImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
-    img.decode = () => resolve(img) as any
-    img.onload = () => resolve(img)
-    img.onerror = reject
     img.crossOrigin = 'anonymous'
     img.decoding = 'async'
     img.src = url
+    img.onerror = reject
+
+    // `src` should be set before calling `decode`
+    if (img.decode) {
+      img
+        .decode()
+        .then(() => resolve(img))
+        .catch(reject)
+    } else {
+      img.onload = () => resolve(img)
+    }
   })
 }
 
@@ -239,4 +247,8 @@ export const isInstanceOfElement = <
     nodePrototype.constructor.name === instance.name ||
     isInstanceOfElement(nodePrototype, instance)
   )
+}
+
+export const deduplicate = <T>(list: T[]): T[] => {
+  return list.sort().filter((item, i) => !i || item !== list[i - 1])
 }

@@ -151,7 +151,7 @@ async function getCSSRules(
               .then((metadata) => embedFonts(metadata, options))
               .then((cssText) =>
                 parseCSS(cssText).forEach((rule) => {
-                  inline.insertRule(rule, sheet.cssRules.length)
+                  inline.insertRule(rule, inline.cssRules.length)
                 }),
               )
               .catch((err: unknown) => {
@@ -228,9 +228,14 @@ export async function embedWebFonts<T extends HTMLElement>(
       ? null
       : await getWebFontCSS(clonedNode, options)
 
-  if (cssText) {
+  const finalCssText =
+    options.extraStyleContent != null
+      ? options.extraStyleContent.concat(cssText || '')
+      : cssText
+
+  if (finalCssText) {
     const styleNode = document.createElement('style')
-    const sytleContent = document.createTextNode(cssText)
+    const sytleContent = document.createTextNode(finalCssText)
 
     styleNode.appendChild(sytleContent)
 

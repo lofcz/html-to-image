@@ -133,11 +133,11 @@ function cloneCSSStyle<T extends HTMLElement>(nativeNode: T, clonedNode: T) {
       ) {
         value = 'block'
       }
-      
+
       if (name === 'd' && clonedNode.getAttribute('d')) {
         value = `path(${clonedNode.getAttribute('d')})`
       }
-      
+
       targetStyle.setProperty(
         name,
         value,
@@ -170,12 +170,41 @@ function cloneSelectValue<T extends HTMLElement>(nativeNode: T, clonedNode: T) {
   }
 }
 
+function cloneScrollbarPositions<T extends HTMLElement>(
+  nativeNode: T,
+  clonedNode: T,
+) {
+  if (nativeNode.scrollLeft !== 0 || nativeNode.scrollTop !== 0) {
+    for (let i = 0; i < clonedNode.children.length; i += 1) {
+      const child = clonedNode.childNodes[i] as any as HTMLSelectElement
+      if (!child.style) return
+      const u = new DOMMatrix(child.style.transform)
+      const a = u.a
+      const b = u.b
+      const c = u.c
+      const d = u.d
+      u.a = 1
+      u.b = 0
+      u.c = 0
+      u.d = 1
+      u.translateSelf(-nativeNode.scrollLeft, -nativeNode.scrollTop)
+      u.a = a
+      u.b = b
+      u.c = c
+      u.d = d
+      child.style.transform = u.toString()
+    }
+    clonedNode.style.overflow = 'hidden'
+  }
+}
+
 function decorate<T extends HTMLElement>(nativeNode: T, clonedNode: T): T {
   if (isInstanceOfElement(clonedNode, Element)) {
     cloneCSSStyle(nativeNode, clonedNode)
     clonePseudoElements(nativeNode, clonedNode)
     cloneInputValue(nativeNode, clonedNode)
     cloneSelectValue(nativeNode, clonedNode)
+    cloneScrollbarPositions(nativeNode, clonedNode)
   }
 
   return clonedNode
@@ -193,7 +222,7 @@ async function ensureSVGSymbols<T extends HTMLElement>(
   const processedDefs: { [key: string]: HTMLElement } = {}
   for (let i = 0; i < uses.length; i++) {
     const use = uses[i]
-    const id = use.getAttribute('xlink:href')
+    const id = use.getAttribute('href') ?? use.getAttribute('xlink:href')
     if (id) {
       const exist = clone.querySelector(id)
       const definition = document.querySelector(id) as HTMLElement
