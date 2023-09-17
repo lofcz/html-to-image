@@ -1,3 +1,5 @@
+export type Pseudo = `::${string}`
+
 export interface Options {
   /**
    * Width in pixels to be applied to node before rendering.
@@ -96,4 +98,10 @@ export interface Options {
    *
    */
   fetchRequestInit?: RequestInit
+
+  /**
+   * A list of pseudo elements which will be included when capture the image.
+   * ::before and ::after are included by default.
+   */
+  includedPseudoElements?: Pseudo[]
 }

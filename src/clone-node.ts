@@ -198,10 +198,14 @@ function cloneScrollbarPositions<T extends HTMLElement>(
   }
 }
 
-function decorate<T extends HTMLElement>(nativeNode: T, clonedNode: T): T {
+function decorate<T extends HTMLElement>(
+  nativeNode: T,
+  clonedNode: T,
+  options: Options,
+): T {
   if (isInstanceOfElement(clonedNode, Element)) {
     cloneCSSStyle(nativeNode, clonedNode)
-    clonePseudoElements(nativeNode, clonedNode)
+    clonePseudoElements(nativeNode, clonedNode, options.includedPseudoElements)
     cloneInputValue(nativeNode, clonedNode)
     cloneSelectValue(nativeNode, clonedNode)
     cloneScrollbarPositions(nativeNode, clonedNode)
@@ -262,6 +266,10 @@ export async function cloneNode<T extends HTMLElement>(
   options: Options,
   isRoot?: boolean,
 ): Promise<T | null> {
+  if (node.tagName === 'noscript') {
+    return null
+  }
+
   if (!isRoot && options.filter && !options.filter(node)) {
     return null
   }
@@ -269,6 +277,6 @@ export async function cloneNode<T extends HTMLElement>(
   return Promise.resolve(node)
     .then((clonedNode) => cloneSingleNode(clonedNode, options) as Promise<T>)
     .then((clonedNode) => cloneChildren(node, clonedNode, options))
-    .then((clonedNode) => decorate(node, clonedNode))
+    .then((clonedNode) => decorate(node, clonedNode, options))
     .then((clonedNode) => ensureSVGSymbols(clonedNode, options))
 }
